@@ -119,13 +119,12 @@ const getAllProperties = function(options, limit) {
   const maxPrice = options.maximum_price_per_night;
   const minRating = options.minimum_rating;
   const ownerId = options.owner_id;
-  const queryParams = [ownerId];
+  const queryParams = [];
 
 
   let queryString = `SELECT properties.*, avg(property_reviews.rating) as average_rating
   FROM properties
-  JOIN property_reviews ON properties.id = property_id
-  WHERE $1 = userId`;
+  JOIN property_reviews ON properties.id = property_id`;
   if (city) {
     queryParams.push(`%${city}%`);
     queryString += ` WHERE city LIKE $${queryParams.length} `;
@@ -173,9 +172,32 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
-}
+  const ownerID = property.owner_id;
+  const title = property.title;
+  const description = property.description;
+  const thumbnailPhotoUrl = property.thumbnail_photo_url;
+  const coverPhotoUrl = property.cover_photo_url;
+  const costPerNight = property.cost_per_night;
+  const street =  property.street;
+  const city = property.city;
+  const province = property.province;
+  const postCode = property.post_code;
+  const country = property.country;
+  const parkingSpaces = property.parking_spaces;
+  const numberOfBathrooms = property.number_of_bathrooms;
+  const numberOfBedrooms = property.number_of_bedrooms;
+
+  const values = [`${ownerID}`, `${title}`,`${description}`, `${thumbnailPhotoUrl}`, `${coverPhotoUrl}`,`${costPerNight}`, `${street}`, `${city}`,`${province}`, `${postCode}`, `${country}`,`${parkingSpaces}`, `${numberOfBathrooms}`,`${numberOfBedrooms}`];
+  const queryString = `INSERT INTO properties (owner_id, title, description, thumbnail_photo_url, cover_photo_url, cost_per_night, street, city, province, post_code, country, parking_spaces, number_of_bathrooms, number_of_bedrooms)
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)  RETURNING *;`;
+  return pool
+    .query(queryString, values)
+    .then((result) => {
+      console.log(result.rows[0]);
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+};
 exports.addProperty = addProperty;
