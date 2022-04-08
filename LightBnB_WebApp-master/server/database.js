@@ -118,16 +118,21 @@ const getAllProperties = function(options, limit) {
   const minPrice = options.minimum_price_per_night;
   const maxPrice = options.maximum_price_per_night;
   const minRating = options.minimum_rating;
-  const ownerId = options.owner_id;
+  const ownerID = options.owner_id;
   const queryParams = [];
 
 
   let queryString = `SELECT properties.*, avg(property_reviews.rating) as average_rating
   FROM properties
-  JOIN property_reviews ON properties.id = property_id`;
+  JOIN property_reviews ON properties.id = property_id
+  WHERE true`;
+  if (ownerID) {
+    queryParams.push(`${ownerID}`);
+    queryString += ` AND owner_id = $${queryParams.length} `;
+  }
   if (city) {
     queryParams.push(`%${city}%`);
-    queryString += ` WHERE city LIKE $${queryParams.length} `;
+    queryString += ` AND city LIKE $${queryParams.length} `;
   }
   if (minPrice) {
     queryParams.push(`${minPrice}` * 100);
